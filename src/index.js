@@ -1,18 +1,13 @@
 module.exports = function solveSudoku(matrix) {
-    const d =convertToMatrixCell(matrix);
+    const d = convertToMatrixCell(matrix);
     recalc(d);
-
     const m = recursiveBruteForce(d);
-
     const rez = convertFromMatrixCell(m);
-   // print(rez);
-
-
-
-  return rez;
+    // print(rez);
+    return rez;
 }
 class Cell {
-    constructor(value,possibleValues, row,col) {
+    constructor(value, possibleValues, row, col) {
         this.value = value;
         this.row = row;
         this.col = col;
@@ -24,137 +19,111 @@ class Cell {
     }
 
     static calculatePossibleValues(cell, matrixOfCell, row, col) {
-
-        if (cell.value != 0 ){
+        if (cell.value != 0) {
             cell.possibleValues = [];
         } else {
-            let rowVals = getRowByNumber(matrixOfCell, row).map(t=>t.value);
-            console.log('rowVals'+row+' '+col);
-            console.log(rowVals);
-            let colVals = getColByNumber(matrixOfCell, col).map(t=>t.value);
-            console.log('colVals');
-            console.log(colVals);
-            let square = getSquareByRowCol(matrixOfCell, col, row).map(t=>t.value);
-
-            console.log('square');
-            console.log(square);
-
-            console.log('imposs');
-
+            let rowVals = getRowByNumber(matrixOfCell, row).map(t => t.value);
+            let colVals = getColByNumber(matrixOfCell, col).map(t => t.value);
+            let square = getSquareByRowCol(matrixOfCell, col, row).map(t => t.value);
             let setOfImpossibleValues = new Set([...rowVals, ...colVals, ...square]);
-            console.log(setOfImpossibleValues);
             let difference = new Set([...set_of_values].filter(x => !setOfImpossibleValues.has(x)));
             cell.possibleValues = [...difference];
         }
     }
-    static cloneCell(cell){
-        let cellNew = {...cell};
+    static cloneCell(cell) {
+        let cellNew = Object.assign(Object.create(Object.getPrototypeOf(cell)), cell);
         cellNew.possibleValues = [...cell.possibleValues];
-        console.log(' clone res '+cellNew.row);
         return cellNew;
     }
 }
-function getRowByNumber(matrixOfCell, row){
+function getRowByNumber(matrixOfCell, row) {
     let arr = [];
-    console.log('before ret');
-    console.log([...matrixOfCell[row]]);
     return [...matrixOfCell[row]];
 }
-function getColByNumber(matrixOfCell, col){
-    console.log("getColByNumber")
+function getColByNumber(matrixOfCell, col) {
     let arr = [];
-
-    return [1,2,3,4,5,6,7,8,9].map(i=>i-1).map(i=>matrixOfCell[i][col]);
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => i - 1).map(i => matrixOfCell[i][col]);
 }
-function getSquareByRowCol(matrixOfCell, col, row){
+function getSquareByRowCol(matrixOfCell, col, row) {
     let result = [];
-    const colLeftTop = col - (col %3);
-    const rowLeftTop = row - (row%3);
-    for (let i = rowLeftTop; i<rowLeftTop+3; i++)
-        for (let j = colLeftTop; j<colLeftTop+3; j++){
+    const colLeftTop = col - (col % 3);
+    const rowLeftTop = row - (row % 3);
+    for (let i = rowLeftTop; i < rowLeftTop + 3; i++)
+        for (let j = colLeftTop; j < colLeftTop + 3; j++) {
             result.push(matrixOfCell[i][j])
         }
     return result;
 }
-function convertToMatrixCell(matrix){
+function convertToMatrixCell(matrix) {
     let res = [];
-    [1,2,3,4,5,6,7,8,9].forEach(i=>res.push([]));
-    for (let i = 0; i<9; i++){
-        for (let j = 0; j<9; j++){
-            let cell = new Cell(matrix[i][j],[], i, j)
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(i => res.push([]));
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            let cell = new Cell(matrix[i][j], [], i, j)
             res[i].push(cell);
         }
     }
-    for (let i = 0; i<9; i++){
-        for (let j = 0; j<9; j++){
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
             const cell = res[i][j];
-            Cell.calculatePossibleValues(cell, res, i,j);
+            Cell.calculatePossibleValues(cell, res, i, j);
         }
     }
     return res;
 
 }
-function getEmptyCells(matrixOfCell){
+function getEmptyCells(matrixOfCell) {
     const res = [];
-    for (let i = 0; i<9; i++){
-        for (let j = 0; j<9; j++){
-           if (!(matrixOfCell[i][j].value)){
-               res.push(matrixOfCell[i][j]);
-           }
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (!(matrixOfCell[i][j].value)) {
+                res.push(matrixOfCell[i][j]);
+            }
         }
     }
     return res;
 }
 
-function recursiveBruteForce(matrixOfCell){
+function recursiveBruteForce(matrixOfCell) {
     let emptyCells = getEmptyCells(matrixOfCell);
-
-    if (emptyCells.length == 0){
+    if (emptyCells.length == 0) {
         return matrixOfCell;
     }
-   // emptyCells.forEach(cell=>{
-
-    const cell = emptyCells[0];
-    let poss =  [...cell.possibleValues];
-
-   // poss.forEach(val=>{
-     for (let idx = 0; idx< poss.length; idx++ ){
-         console.log('set value = '+cell.possibleValues[idx]);
+    emptyCells.sort((a, b) => {
+        return -(a.possibleValues.length - b.possibleValues.length)
+    });
+    const cell = emptyCells.pop();
+    let poss = [...cell.possibleValues];
+    for (let idx = 0; idx < poss.length; idx++) {
         let cellNew = Cell.cloneCell(cell);
         cellNew.value = cell.possibleValues[idx];
         cellNew.possibleValues = [];
         const newMatrix = cloneMatrix(matrixOfCell);
         newMatrix[cellNew.row][cellNew.col] = cellNew;
-        recalc(newMatrix);
-       // print(newMatrix);
-        if (isVrong(newMatrix)){
-
+        const newEmpty = emptyCells.map(c => newMatrix[c.row][c.col]);;
+        recalcNew(newEmpty, newMatrix);
+        newEmpty.sort()
+        if (isWrong(newMatrix)) {
             return false;
         }
 
-        const r =  recursiveBruteForce(newMatrix);
-        if (!r){
-
+        const r = recursiveBruteForce(newMatrix);
+        if (!r) {
             continue;
-
         } else {
-
-            //print(r)
             return r;
         }
 
+    }
 
-
-     }
-
-   // })
+    // })
 }
-function cloneMatrix(matrixOfCell){
+function cloneMatrix(matrixOfCell) {
     const res = [];
-    [1,2,3,4,5,6,7,8,9].forEach(i=>res.push([]));
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(i => res.push([]));
 
-    for (let i = 0; i<9; i++){
-        for (let j = 0; j<9; j++){
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
             const cell = matrixOfCell[i][j];
             const clone = Cell.cloneCell(cell);
             res[i].push(clone);
@@ -163,18 +132,21 @@ function cloneMatrix(matrixOfCell){
     return res;
 }
 
-function recalc(matrixCell){
-    for (let i = 0; i<9; i++){
-        for (let j = 0; j<9; j++){
-            Cell.calculatePossibleValues(matrixCell[i][j],matrixCell,i,j);
+function recalc(matrixCell) {
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            Cell.calculatePossibleValues(matrixCell[i][j], matrixCell, i, j);
         }
     }
 
 }
-function isVrong(matrixCell){
-    for (let i = 0; i<9; i++){
-        for (let j = 0; j<9; j++){
-            if (!matrixCell[i][j] && matrixCell[i][j].possibleValues.length == 0){
+function recalcNew(matrixs, matrixCell) {
+    matrixs.forEach(c => { Cell.calculatePossibleValues(c, matrixCell, c.row, c.col); })
+}
+function isWrong(matrixCell) {
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (!matrixCell[i][j] && matrixCell[i][j].possibleValues.length == 0) {
                 return true;
             }
         }
@@ -182,19 +154,19 @@ function isVrong(matrixCell){
     return false;
 
 }
-function print(matrix){
-    for (let i = 0; i<9; i++){
+function print(matrix) {
+    for (let i = 0; i < 9; i++) {
         console.log(matrix[i]);
     }
 
 
 }
 
-function convertFromMatrixCell(matrix){
+function convertFromMatrixCell(matrix) {
     let res = [];
-    [1,2,3,4,5,6,7,8,9].forEach(i=>res.push([]));
-    for (let i = 0; i<9; i++){
-        for (let j = 0; j<9; j++){
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(i => res.push([]));
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
             res[i].push(matrix[i][j].value);
         }
     }
@@ -204,7 +176,7 @@ function convertFromMatrixCell(matrix){
 }
 
 
-const arr_of_values = [1,2,3,4,5,6,7,8,9];
-const set_of_values = new Set([1,2,3,4,5,6,7,8,9]);
+const arr_of_values = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const set_of_values = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
 
